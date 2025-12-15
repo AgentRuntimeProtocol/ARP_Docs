@@ -1,6 +1,6 @@
 ---
 slug: /
-title: Introduction
+title: Agent Runtime Protocol
 sidebar_position: 1
 ---
 

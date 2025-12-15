@@ -62,7 +62,7 @@ const config: Config = {
           label: "Docs",
         },
         {
-          href: "https://github.com/AgentRuntimeProtocol/ARP_Docs",
+          href: "https://github.com/AgentRuntimeProtocol",
           label: "GitHub",
           position: "right",
         },
