@@ -23,4 +23,4 @@ Build output is written to `build/`.
 
 ## Deployment
 
-This repo is designed to deploy its static build output to a dedicated S3 bucket, then served via CloudFront to https://agent-runtime-protocol.com/public_docs.
+See `arp/ARP_Docs/docs/deployment/aws.md`.

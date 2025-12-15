@@ -39,57 +39,32 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Resolve deployment targets
-        id: targets
+      - name: Validate deployment secrets
         shell: bash
         env:
-          STACK_NAME: ${{ secrets.AWS_STACK_NAME }}
-          FALLBACK_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
-          FALLBACK_DISTRIBUTION_ID: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+          DOCS_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+          DISTRIBUTION_INPUT: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
           set -euo pipefail
-
-          bucket=""
-          distribution_id=""
-
-          if [[ -n "${STACK_NAME}" ]]; then
-            bucket="$(aws cloudformation describe-stacks \
-              --stack-name "${STACK_NAME}" \
-              --query "Stacks[0].Outputs[?OutputKey=='DocsBucketName'].OutputValue" \
-              --output text || true)"
-
-            if [[ -z "${bucket}" || "${bucket}" == "None" ]]; then
-              bucket="$(aws cloudformation describe-stacks \
-                --stack-name "${STACK_NAME}" \
-                --query "Stacks[0].Outputs[?OutputKey=='WebsiteBucketName'].OutputValue" \
-                --output text || true)"
-            fi
-
-            distribution_id="$(aws cloudformation describe-stacks \
-              --stack-name "${STACK_NAME}" \
-              --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" \
-              --output text || true)"
+          if [[ -z "${DOCS_BUCKET}" ]]; then
+            echo "Missing required secret: AWS_S3_BUCKET" >&2
+            exit 1
           fi
-
-          if [[ -z "${bucket}" || "${bucket}" == "None" ]]; then
-            bucket="${FALLBACK_BUCKET}"
-          fi
-
-          if [[ -z "${distribution_id}" || "${distribution_id}" == "None" ]]; then
-            distribution_id="${FALLBACK_DISTRIBUTION_ID}"
-          fi
-
-          if [[ -z "${bucket}" ]]; then
-            echo "Unable to resolve S3 bucket. Set AWS_STACK_NAME (DocsBucketName/WebsiteBucketName output) or AWS_S3_BUCKET." >&2
+          if [[ -z "${DISTRIBUTION_INPUT}" ]]; then
+            echo "Missing required secret: AWS_CLOUDFRONT_DISTRIBUTION_ID" >&2
             exit 1
           fi
 
-          echo "bucket=${bucket}" >> "${GITHUB_OUTPUT}"
-          echo "distribution_id=${distribution_id}" >> "${GITHUB_OUTPUT}"
-
       - name: Upload to S3
-        run: aws s3 sync build/ "s3://${{ steps.targets.outputs.bucket }}/public_docs/" --delete
+        env:
+          DOCS_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        run: aws s3 sync build/ "s3://${DOCS_BUCKET}/public_docs/" --delete
 
       - name: Invalidate CloudFront
-        if: ${{ steps.targets.outputs.distribution_id != '' }}
-        run: aws cloudfront create-invalidation --distribution-id "${{ steps.targets.outputs.distribution_id }}" --paths "/public_docs*"
+        shell: bash
+        env:
+          DISTRIBUTION_INPUT: ${{ secrets.AWS_CLOUDFRONT_DISTRIBUTION_ID }}
+        run: |
+          set -euo pipefail
+          distribution_id="${DISTRIBUTION_INPUT##*/}"
+          aws cloudfront create-invalidation --distribution-id "${distribution_id}" --paths "/public_docs*"
