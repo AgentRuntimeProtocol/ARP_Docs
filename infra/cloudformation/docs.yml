@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ARP Docs - S3 bucket for /public_docs* served via the main website CloudFront distribution (OAC)
+
+Parameters:
+  BucketName:
+    Type: String
+    Default: ""
+    Description: Optional fixed bucket name. Leave blank to let CloudFormation name it.
+
+  WebsiteDistributionId:
+    Type: String
+    Description: CloudFront distribution ID for the main website (used to scope the S3 bucket policy).
+
+Conditions:
+  HasBucketName: !Not [!Equals [!Ref BucketName, ""]]
+
+Resources:
+  DocsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If
+        - HasBucketName
+        - !Ref BucketName
+        - !Ref "AWS::NoValue"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  DocsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref DocsBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${DocsBucket.Arn}/public_docs/*"
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${WebsiteDistributionId}"
+
+Outputs:
+  DocsBucketName:
+    Description: S3 bucket name for docs assets
+    Value: !Ref DocsBucket
+
+  CloudFrontDistributionId:
+    Description: CloudFront distribution ID used by this bucket policy
+    Value: !Ref WebsiteDistributionId
