@@ -1,9 +1,17 @@
 :root {
-  --ifm-color-primary: #2563eb;
-  --ifm-color-primary-dark: #1d4ed8;
-  --ifm-color-primary-darker: #1e40af;
-  --ifm-color-primary-light: #3b82f6;
-  --ifm-color-primary-lighter: #60a5fa;
-  --ifm-color-primary-lightest: #93c5fd;
-}
+  --ifm-font-family-base: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  --ifm-heading-font-family: var(--ifm-font-family-base);
+  --ifm-font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
+  --ifm-font-weight-normal: 200;
+  --ifm-font-weight-semibold: 275;
+  --ifm-font-weight-bold: 500;
+
+  --ifm-color-primary: #2efcff;
+  --ifm-color-primary-dark: #10fcff;
+  --ifm-color-primary-darker: #01fbff;
+  --ifm-color-primary-darkest: #00d0d3;
+  --ifm-color-primary-light: #4cfcff;
+  --ifm-color-primary-lighter: #5bfdff;
+  --ifm-color-primary-lightest: #88fdff;
+}

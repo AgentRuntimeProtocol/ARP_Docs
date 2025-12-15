@@ -43,8 +43,13 @@ const config: Config = {
   ],
 
   themeConfig: {
+    colorMode: {
+      defaultMode: "dark",
+      disableSwitch: true,
+      respectPrefersColorScheme: false,
+    },
     navbar: {
-      title: "ARP",
+      title: "Agent Runtime Protocol",
       logo: {
         alt: "ARP logo",
         src: "img/logo.svg",

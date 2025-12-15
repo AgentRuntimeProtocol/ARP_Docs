@@ -1,5 +1,6 @@
 ---
 title: AWS Deployment
+sidebar_position: 1
 ---
 
 This repo builds a static Docusaurus site and publishes it to a shared S3 bucket under `public_docs/`. The main website CloudFront distribution should route `/public_docs*` to that bucket/prefix.
