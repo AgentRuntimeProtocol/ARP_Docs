@@ -3,80 +3,99 @@ title: Tool Registry API Reference
 sidebar_position: 3
 ---
 
-Authoritative reference for Tool Registry public APIs (HTTP APIs and/or config schema).
+Authoritative reference for the **JARVIS Tool Registry** HTTP API.
 
-## Interfaces
+:::note Spec reference
 
-Base URL defaults to `http://127.0.0.1:8000` (configurable via `TOOL_REGISTRY_HOST` / `TOOL_REGISTRY_PORT`).
+JARVIS Tool Registry implements the ARP Standard Tool Registry API v1:
+
+- [ARP Standard: Tool Registry](../arp-standard/components/tool-registry.md)
+- OpenAPI source: `ARP_Standard/spec/v1/openapi/tool-registry.openapi.yaml`
+
+:::
+
+## Base URL
+
+Default: `http://127.0.0.1:8000`
+
+Configured via:
+
+- CLI: `arp-jarvis tool-registry --host … --port …` (or `arp-jarvis-tool-registry --host … --port …`)
+- env: `TOOL_REGISTRY_HOST`, `TOOL_REGISTRY_PORT`
+
+## Endpoints
 
 ### `GET /v1/tools`
 
-Returns a minimal planner view (list of `{name, description}`):
+Returns a list of `ToolDefinition` objects.
+
+Example (built-in `core` domain tools):
 
 ```json
 [
-  {"name":"echo","description":"Echoes the provided text."},
-  {"name":"calc","description":"Evaluate a simple arithmetic expression."}
+  {
+    "tool_id": "tool_echo",
+    "name": "echo",
+    "description": "Echoes the provided text.",
+    "input_schema": {
+      "type": "object",
+      "properties": { "text": { "type": "string" } },
+      "required": ["text"],
+      "additionalProperties": false
+    },
+    "source": "registry_local"
+  }
 ]
 ```
 
-### `GET /v1/tools/{name}`
+### `GET /v1/tools/{tool_id}`
 
-Returns the full `ToolDefinition` (see schema below).
+Returns the full `ToolDefinition` for the requested `tool_id`.
 
-### `POST /v1/tools/{name}:invoke`
+### `POST /v1/tool-invocations`
 
-Invokes a tool. Request body (MVP) is a `ToolInvocationRequest`:
+Invokes a tool by `tool_id` or `tool_name`.
 
-```json
-{"schema_version":"0.1.0","args":{ /* tool args */ },"context":{},"trace":{}}
-```
-
-Response is a normalized `ToolResult`:
+Request body (`ToolInvocationRequest`):
 
 ```json
-{"schema_version":"0.1.0","ok":true,"result":{ /* tool result */ },"metrics":{"latency_ms":12}}
+{
+  "invocation_id": "inv_001",
+  "tool_name": "calc",
+  "args": { "expression": "(19*23)" }
+}
 ```
 
-## Tool schema
+Response body (`ToolInvocationResult`):
 
-Tool Registry uses the shared schemas from `jarvis-model`:
+```json
+{
+  "invocation_id": "inv_001",
+  "ok": true,
+  "result": { "expression": "(19*23)", "value": 437 },
+  "duration_ms": 1
+}
+```
 
-- `ToolDefinition`
-  - required: `schema_version`, `name`, `description`, `version`, `parameters`
-  - optional: `returns`, `tags`, `source`
-- `ToolInvocationRequest`
-  - required: `schema_version`, `args`
-  - optional: `context`, `trace`
-- `ToolResult`
-  - required: `schema_version`, `ok`
-  - optional: `result`, `error`, `metrics`, `summary`
-- `Error`
-  - required: `schema_version`, `code`, `message`, `retryable`
-  - optional: `details`, `cause`
+## Error behavior (JARVIS)
 
-## Errors
+### ErrorEnvelope responses
 
-### Error codes
+These errors return an ARP `ErrorEnvelope` (`{"error": {...}}`):
 
-Common Tool Registry error codes include:
+- unknown route: `404` (`route.not_found`)
+- method not allowed: `405` (`request.method_not_allowed`)
+- invalid JSON: `400` (`request.invalid_json`)
+- invalid request shape: `400` (`request.invalid_shape`)
+- unknown tool ID (lookup): `404` (`tool.not_found`)
 
-- Routing / request shape:
-  - `route.not_found`
-  - `request.method_not_allowed`
-  - `request.invalid_json`
-  - `request.invalid_shape`
-- Tool invocation:
-  - `tool.not_found`
-  - `tool.invalid_args`
-  - `tool.execution_error` (expected tool error via `ValueError`)
-  - `tool.handler_error` (unexpected exception in the tool handler)
+### Invocation failures
 
-### Status code mapping (invocation)
+If the invocation request is valid JSON and passes request-shape checks, the Tool Registry returns `200` with a `ToolInvocationResult`:
 
-For `POST /v1/tools/{name}:invoke`:
+- `ok: true` with `result`, or
+- `ok: false` with `error` (for example `tool.not_found`, `tool.invalid_args`, `tool.execution_error`, `tool.handler_error`)
 
-- `200`: `ToolResult.ok == true`
-- `400`: `tool.invalid_args` or request-shape problems
-- `404`: `tool.not_found`
-- `500`: execution/handler errors
+### Request IDs
+
+Every response includes an `X-Request-Id` header. You can also send your own `X-Request-Id` to propagate it through logs.

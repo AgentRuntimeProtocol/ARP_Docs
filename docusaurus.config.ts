@@ -52,7 +52,7 @@ const config: Config = {
       title: "Agent Runtime Protocol",
       logo: {
         alt: "ARP logo",
-        src: "img/logo.svg",
+        src: "img/ARP_Transparent.png",
       },
       items: [
         {

@@ -21,6 +21,3 @@ npm run build
 
 Build output is written to `build/`.
 
-## Deployment
-
-See `arp/ARP_Docs/docs/deployment/aws.md`.

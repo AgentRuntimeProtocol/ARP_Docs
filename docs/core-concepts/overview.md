@@ -1,14 +1,22 @@
 ---
-title: Overview
-sidebar_position: 1
+title: Core Concepts
+sidebar_position: 0
 ---
 
-Core concepts describe the MVP components of ARP and how they work together.
+This section provides a stable set of conceptual entry points used by older docs links.
 
-## Topics
+For normative behavior, see:
+
+- [ARP Standard: Services](../arp-standard/components/index.md)
+
+For how the first-party implementation behaves, see:
+
+- [JARVIS: Component Implementations](../jarvis/component-implementations/index.md)
+
+## Concepts
 
 - [Runtime](./runtime.md)
 - [Tool Registry](./tool-registry.md)
-- [Model Integration](./model-integration.md)
-- [Control Plane (Future)](./control-plane.md)
+- [Daemon](./daemon.md)
+- [Control Plane](./control-plane.md)
 

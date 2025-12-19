@@ -1,202 +1,207 @@
 ---
 title: Quickstart Guide
-sidebar_position: 2
+sidebar_position: 1
 ---
 
-Follow this guide to quickly set and get familiar with an ARP stack.
+Run a minimal end-to-end ARP stack locally using **JARVIS**, the first-party implementation of the ARP Standard.
 
-## Prerequisites
+:::note Standard vs. implementation
+
+This Quickstart focuses on running the JARVIS stack. For ARP contracts (OpenAPI/JSON Schema), see [ARP Standard](./arp-standard/index.md).
+
+:::
+
+:::tip Prerequisites
 
 - Python `>=3.10`
-- Optional (for real LLM integration): an active OpenAI API key.
+- `curl`
+- Optional (for real LLM calls): an OpenAI API key
+
+:::
+
+## What you’ll do
+
+- Install the pinned JARVIS stack (`arp-jarvis`)
+- Start Tool Registry (tools + invocations)
+- Run a Runtime request that calls a tool
+- Inspect the execution trace
 
 ---
 
-## Step 1: Install / setup
-
-Create a virtual environment and install the MVP packages:
+## Step 1: Install the stack
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 
-pip install jarvis-arp
+python3 -m pip install arp-jarvis
+arp-jarvis versions
 ```
 
-:::note using the `jarvis-arp` package
+:::note What `arp-jarvis` installs
 
-This package provides an out-of-the-box installation of the 3 packages `jarvis-model`, `jarvis-tool-registry` and `jarvis-runtime`. Each release of the `jarvis-arp` package contains a compatible version set of the 3 packages, and is the **preferred way** of installing the ARP stack.
+`arp-jarvis` pins compatible versions of:
 
-This is not to say that devs cannot directly install the packages. If your specific needs only requires a subset of them, feel free to pick and choose. Do note that given active development you may see changing contract across versions and backward compatibility is not always guaranteed.
+- `arp-standard-py` (ARP Standard SDK)
+- `arp-jarvis-tool-registry` (Tool Registry service)
+- `arp-jarvis-runtime` (Runtime CLI + HTTP server)
+- `arp-jarvis-daemon` (Daemon CLI + HTTP server)
+
+It also provides a pass-through meta CLI: `arp-jarvis`.
+
+:::
+
+:::tip Use component CLIs directly (optional)
+
+All commands in this guide use the meta CLI (`arp-jarvis …`). You can also run:
+
+- `arp-jarvis-tool-registry`
+- `arp-jarvis-runtime`
+- `arp-jarvis-daemon`
+
+The meta CLI is a thin pass-through wrapper.
 
 :::
 
 ---
 
-## Step 2: Start the tool registry 
+## Step 2: Start Tool Registry
 
-Tools are registered by the **Tool Registry service** (at startup only, for now.) 
-
-Tools live in domain modules (for example, `tool_registry/domains/core.py` in the tool registry repo) and are enabled via the `TOOL_REGISTRY_DOMAINS` environment variable. The `core` domain is added by default.
-
-To start the tool registry, open terminal and run:
+Terminal A:
 
 ```bash
-tool-registry
+arp-jarvis tool-registry
 ```
 
-:::note MVP Tool Registry
+Sanity check (adjust the base URL if it binds to a different port):
 
-The default `core` domain ships with a few sample tools (`echo`, `calc`, `time_now`) so you can run end-to-end without writing code. This is not an accurate representation of what post-release tool landscape looks like. There is [active development](./core-concepts/tool-registry.md) in expanding the capability of the `Tool Registry`, including things like MCP support and more first-party tools. Stay tuned!
+```bash
+curl -sS http://127.0.0.1:8000/v1/health
+curl -sS http://127.0.0.1:8000/v1/version
+curl -sS http://127.0.0.1:8000/v1/tools
+```
+
+:::tip Built-in tools (core domain)
+
+The default `core` domain ships a few demo tools: `echo`, `calc`, `time_now`.
+
+See the JARVIS Tool Registry implementation docs for details: [Tool Registry](./jarvis/component-implementations/tool-registry.md).
 
 :::
 
-### Optional: Step 2.5: Writing and using your new tool
+### Optional: add your own tool (local dev)
 
-Minimal tool definition format, using part of `core` module for reference:
+- Follow [Integrating Your First Custom Tool](./guides/tool-development-guide.md).
+- Restart Tool Registry with your domain enabled:
 
-```py
-from jarvis_model import ToolDefinition
-
-def load_tools() -> list[Tool]:
-    return [
-        Tool(definition=_echo_definition(), handler=_echo),
-    ]
-
-# The definition as the registry sees and exposes.
-def _echo_definition() -> ToolDefinition:
-    return ToolDefinition(
-        name="echo",
-        description="Echoes the provided text.",
-        version="0.1.0",
-        parameters={
-            "type": "object",
-            "properties": {"text": {"type": "string"}},
-            "required": ["text"],
-            "additionalProperties": False,
-        },
-        tags=["core"],
-    )
-
-# The tool handler that actually execute the action.
-def _echo(args: dict[str, Any], context: Optional[dict[str, Any]], trace: Optional[dict[str, Any]]) -> dict[str, Any]:
-    return {"text": str(args.get("text") or "")}
-
-```
-
-To add your own tool during development, clone the `tool-registry` repo and follow the Tool Registry pattern:
-
-- Implement it in a domain module under `tool_registry/domains/`.
-  - Use the existing `core.py` for reference.
-- Start the server with your domain enabled: `TOOL_REGISTRY_DOMAINS=core,<your_domain> tool-registry`.
+  ```bash
+  TOOL_REGISTRY_DOMAINS=core,<your_domain> arp-jarvis tool-registry
+  ```
 
 ---
 
-## Step 3: Configure model integration
+## Step 3: Run your first request
 
-The runtime supports two execution modes:
-
-- `stub` (default): fully local, deterministic roles (no external model calls).
-  - This is a good option if you just want to see Jarvis runtime in action, in some fixed workflows. You can use it to confirm your setup, and view some execution records and trace logs. 
-
-- `openai`: uses the OpenAI Python SDK to call the OpenAI Responses API (Planner + tool-args generation + Chat). 
-  - This actually calls OpenAI and you can see the Jarvis agent runtime instance provide real responses to your query.
-  - To enable `openai` mode, run:
-
-    ```bash
-    pip install openai
-    export OPENAI_API_KEY="..."
-    ```
-  - Optional overrides:
-    - `OPENAI_BASE_URL` (or `JARVIS_OPENAI_BASE_URL`)
-    - `JARVIS_MODEL_DEFAULT` (default: `gpt-5-nano`)
-    - `JARVIS_MODEL_PLANNER`, `JARVIS_MODEL_TOOL_ARGS`, `JARVIS_MODEL_CHAT`
-
-:::note OPENAI INTEGRATION
-
-There is a small change to make `openai` part of the `jarvis-arp` package to eliminate the need for this installation. This guide will be updated once that is checked in. 
-
-:::
-
----
-
-## Step 4: Run your first query with Jarvis runtime
-
-:::tip Using `openai` mode
-
-Add `--mode openai` (or set `JARVIS_RUNTIME_MODE=openai`) to the `jarvis-runtime …` commands below, and make sure `OPENAI_API_KEY` is set.
-
-Example (no ports, in-process Tool Registry):
+Terminal B:
 
 ```bash
-jarvis-runtime run --mode openai --tool-registry inproc --request "What time is it in UTC?"
+arp-jarvis runtime run \
+  --tool-registry-url http://127.0.0.1:8000 \
+  --request "What time is it in UTC?"
 ```
 
-:::
+If Tool Registry is not running on `:8000`, update `--tool-registry-url` to match.
 
+The runtime prints a final answer and a trace path like `./runs/<flow_id>/trace.jsonl`.
 
-### Option A (Recommended): run against a running Tool Registry HTTP service.
+### Optional: run via the Runtime HTTP API
 
-Terminal A (Tool Registry):
+Terminal B (Runtime server):
 
 ```bash
-tool-registry
+arp-jarvis runtime serve \
+  --host 127.0.0.1 \
+  --tool-registry-url http://127.0.0.1:8000
 ```
 
-Terminal B (Runtime):
+This serves on `http://127.0.0.1:8081` by default. If it binds to a different port, update the URLs below.
+
+Terminal C (client):
 
 ```bash
-jarvis-runtime demo --tool-registry http --tool-registry-url http://127.0.0.1:8000
-```
+curl -sS -X POST http://127.0.0.1:8081/v1/runs \
+  -H 'Content-Type: application/json' \
+  -d '{"input":{"goal":"What time is it in UTC?"}}'
 
-### Option B: run with in-process Tool Registry; useful in restricted environments:
-
-```bash
-jarvis-runtime demo --tool-registry inproc
-```
-
-The runtime prints the final text output plus a trace file path. By default, traces are written to `./runs/<flow_id>/trace.jsonl` (override with `--trace-dir`).
-
-If you prefer a single request instead of the demo:
-
-```bash
-jarvis-runtime run --request "What time is it in UTC?" --tool-registry http --tool-registry-url http://127.0.0.1:8000
+# Copy run_id from the response, then:
+curl -sS http://127.0.0.1:8081/v1/runs/<run_id>/result
 ```
 
 ---
 
-## Step 5: Review your execution traces 
+## Step 4 (Optional): Enable OpenAI mode
 
-Every `jarvis-runtime` run writes a `JSONL` trace file and prints its path in the terminal.
+The execution in previous sections uses a "stub" LLM client that deterministically handle some basic predefined queries for demo purpose. If you want to see a **real** LLM in action, use the `openai` mode of the runtime.
 
-:::tip Using `.jsonl` files
+:::tip
 
-`jsonl` is a format for logging in a structured way. Each line is a JSON event object. For Jarvis runtime traces, each event has a `ts` timestamp and a `type`, and some other useful debugging information. 
+You will need an OpenAI API key for this step. If you don't have one, check out OpenAI's [official website](https://help.openai.com/en/articles/4936850-where-do-i-find-my-openai-api-key).
 
 :::
 
-1. Ctrl-click the trace file path in the terminal, if you are using one that supports it like `vscode`. Or, 
-2. Copy the path from the runtime output and open it:
+Install the optional extra and set your key:
 
-   ```bash
-   cat ./runs/<flow_id>/trace.jsonl
-   ```
+```bash
+python3 -m pip install "arp-jarvis[openai]"
+export OPENAI_API_KEY="<YourApiKey>"
+```
 
-Useful things to look for:
+Run with OpenAI-backed roles:
+
+```bash
+arp-jarvis runtime run \
+  --mode openai \
+  --tool-registry-url http://127.0.0.1:8000 \
+  --request "What time is it in UTC?"
+```
+
+Optional overrides:
+
+- `OPENAI_BASE_URL` (or `JARVIS_OPENAI_BASE_URL`)
+- `JARVIS_MODEL_DEFAULT` (default: `gpt-5-nano`)
+- `JARVIS_MODEL_PLANNER`, `JARVIS_MODEL_TOOL_ARGS`, `JARVIS_MODEL_CHAT`
+
+---
+
+## Step 5: Review your execution traces
+
+Every `arp-jarvis runtime` run writes a JSONL trace file and prints its path in the terminal.
+
+```bash
+cat ./runs/<flow_id>/trace.jsonl
+```
+
+Useful event types to look for:
 
 - `flow_started` / `flow_completed` (overall status and final text)
-- `step_created` / `step_started` / `step_completed` (plan/tool/chat step lifecycle)
+- `step_created` / `step_started` / `step_completed` (plan/tool/chat lifecycle)
 - `tool_args_generated`, `tool_invocation`, `tool_result` (tool execution)
 - `llm_call`, `llm_result` (only in `--mode openai`)
 
-:::tip Run without traces
+:::tip Trace redaction
 
-If you want traces without prompt contents, run the runtime with `--redact-prompts`.
+Use `--redact-prompts` (or set `JARVIS_REDACT_PROMPTS=1`) to keep prompt contents out of traces.
 
 :::
 
 ## Next steps
 
-- Read the [Core Concepts](./core-concepts/overview.md) pages to understand Runtime, Tool Registry, and Model Integration.
-- Follow [Building Your First Agent](./guides/building-your-first-agent.md) to add a custom tool and run a flow end-to-end.
-- Use the [API Reference](./api-reference/overview.md) when integrating programmatically.
+Congratulations! You just ran your first ARP-compatible stack, and your agent just told you the UTC time retrieved via a tool. This is a very simple RAG use case, but it showcases how the core components of ARP work together. 
+
+The next steps for you, read on about any of the following topics: 
+
+- JARVIS components: [Component Implementations](./jarvis/component-implementations/index.md)
+- ARP Standard: [Services](./arp-standard/components/index.md)
+- API details: [API Reference](./api-reference/index.md)
+- Write your own runtime (agent): [Building Your First Agent Runtime](./guides/building-your-first-agent.md)
+- Extend with tools: [Integrating Your First Custom Tool](./guides/tool-development-guide.md)
