@@ -28,7 +28,7 @@ This Quickstart focuses on running the JARVIS stack. For ARP contracts (OpenAPI/
 
 ---
 
-## Step 1: Install the stack
+## Step 1: Install the stack in an virtual environment
 
 ```bash
 python3 -m venv .venv
@@ -48,6 +48,18 @@ arp-jarvis versions
 - `arp-jarvis-daemon` (Daemon CLI + HTTP server)
 
 It also provides a pass-through meta CLI: `arp-jarvis`.
+
+:::
+
+:::tip Using `venv`
+
+The `venv` module gives you the ability to create an virtual environment to consistently install and use your dependency packages. We use this extensively across the documentations for this exact reason. 
+
+To leave an `venv` virtual environment, run:
+
+```bash
+deactivate
+```
 
 :::
 
@@ -73,7 +85,7 @@ Terminal A:
 arp-jarvis tool-registry
 ```
 
-Sanity check (adjust the base URL if it binds to a different port):
+Sanity check in a new terminal tab (adjust the base URL if it binds to a different port):
 
 ```bash
 curl -sS http://127.0.0.1:8000/v1/health
@@ -105,6 +117,9 @@ See the JARVIS Tool Registry implementation docs for details: [Tool Registry](./
 Terminal B:
 
 ```bash
+# activate the same virtual environment for the new terminal.
+source .venv/bin/activate
+
 arp-jarvis runtime run \
   --tool-registry-url http://127.0.0.1:8000 \
   --request "What time is it in UTC?"
@@ -119,6 +134,9 @@ The runtime prints a final answer and a trace path like `./runs/<flow_id>/trace.
 Terminal B (Runtime server):
 
 ```bash
+# activate the same virtual environment for the new terminal.
+source .venv/bin/activate
+
 arp-jarvis runtime serve \
   --host 127.0.0.1 \
   --tool-registry-url http://127.0.0.1:8000
@@ -152,6 +170,9 @@ You will need an OpenAI API key for this step. If you don't have one, check out 
 Install the optional extra and set your key:
 
 ```bash
+# activate the same virtual environment for the new terminal.
+source .venv/bin/activate
+
 python3 -m pip install "arp-jarvis[openai]"
 export OPENAI_API_KEY="<YourApiKey>"
 ```
@@ -165,7 +186,7 @@ arp-jarvis runtime run \
   --request "What time is it in UTC?"
 ```
 
-Optional overrides:
+Optional override env variable:
 
 - `OPENAI_BASE_URL` (or `JARVIS_OPENAI_BASE_URL`)
 - `JARVIS_MODEL_DEFAULT` (default: `gpt-5-nano`)
@@ -176,6 +197,10 @@ Optional overrides:
 ## Step 5: Review your execution traces
 
 Every `arp-jarvis runtime` run writes a JSONL trace file and prints its path in the terminal.
+
+You can ctrl-click the link in the output if your terminal supports it (e.g. VS Code), or you can open it manually in the text editor of your choice. 
+
+Alternatively, run this command to see the content in terminal. 
 
 ```bash
 cat ./runs/<flow_id>/trace.jsonl

@@ -5,7 +5,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 const config: Config = {
   title: "ARP Docs",
   tagline: "API Documentation",
-  favicon: "img/favicon.svg",
+  favicon: "img/ARP_Transparent.png",
 
   url: "https://agent-runtime-protocol.com",
   baseUrl: "/public_docs/",
