@@ -18,15 +18,13 @@ First-party offering of this translation layer is in development.
 Create a service that:
 
 1. accepts requests in the external protocol
-2. translates them into an ARP `RunRequest`
-3. submits the run to:
-   - a **Runtime** (direct), or
-   - a **Daemon** (routed / multi-instance)
-4. translates ARP `RunStatus` / `RunResult` / trace information back into the external protocol’s shapes
+2. translates them into an ARP v1 run start request (root `NodeType` + input)
+3. submits the run to **`Run Gateway`** (client entrypoint) or **`Run Coordinator`** (run authority)
+4. translates ARP `Run` / `NodeRun` state and events back into the external protocol’s shapes
 
 ## Related docs
 
-- [ARP Standard: Runtime](../arp-standard/components/runtime.md)
-- [ARP Standard: Tool Registry](../arp-standard/components/tool-registry.md)
-- [ARP Standard: Daemon](../arp-standard/components/daemon.md)
+- [ARP Standard: Run Gateway](../arp-standard/components/run-gateway.md)
+- [ARP Standard: Run Coordinator](../arp-standard/components/run-coordinator.md)
+- [JARVIS Run Gateway](../jarvis/component-implementations/run-gateway.md)
 - [Roadmap](../resources/roadmap.md)

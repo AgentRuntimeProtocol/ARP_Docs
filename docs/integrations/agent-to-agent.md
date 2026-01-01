@@ -1,5 +1,5 @@
 ---
-title: Agent-to-Agent (A2A)
+title: Agent-to-Agent — A2A
 sidebar_position: 2
 ---
 
@@ -7,21 +7,21 @@ This page describes multi-agent patterns (“agent-to-agent”) in ARP terms.
 
 :::caution WIP
 
-ARP Standard v1 does not define a dedicated A2A protocol, and the first-party JARVIS stack does not ship a multi-agent coordination layer today. The patterns below are future guidance to integrate to either layer.
+ARP Standard v1 does not define a dedicated A2A protocol, and the first-party JARVIS stack does not ship a multi-agent coordination layer today. The patterns below are guidance for integrating A2A behavior into the node-centric execution fabric.
 
 :::
 
 ## Recommended patterns
 
-### Pattern 1: “Agents as tools” (via Tool Registry)
+### Pattern 1: “Agents as capabilities” (atomic `NodeType`s)
 
-Expose “call another agent” as a Tool Registry tool. The tool handler:
+Expose “call another agent” as one or more atomic `NodeType`s. The handler:
 
-- constructs a `RunRequest`
-- submits it to a Runtime (direct) or Daemon (routed)
-- returns the `RunResult` (or a filtered subset) as the tool result
+- sends a request to the remote agent API
+- normalizes the response into typed outputs
+- returns those outputs as the atomic `NodeRun` outputs
 
-This keeps the runtime’s execution model unchanged: the runtime only knows how to call tools; the tool encapsulates the A2A hop.
+This keeps the execution fabric unchanged: planners/selectors see the remote agent as a capability option, and policy can gate it like any other node type.
 
 ### Pattern 2: Orchestrator at the application layer
 
@@ -35,6 +35,7 @@ This is often the simplest approach when custom routing or business-specific pol
 
 ## Related docs
 
-- [ARP Standard: Runtime](../arp-standard/components/runtime.md)
-- [ARP Standard: Daemon](../arp-standard/components/daemon.md)
+- [Concept: Candidate Sets](../fundamentals/concepts/candidate-sets.md)
+- [ARP Standard: Run Gateway](../arp-standard/components/run-gateway.md)
+- [ARP Standard: Run Coordinator](../arp-standard/components/run-coordinator.md)
 - [Roadmap](../resources/roadmap.md)

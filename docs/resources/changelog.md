@@ -7,8 +7,11 @@ Where to find authoritative change history for the ARP ecosystem.
 
 ## ARP Standard (spec changes)
 
-- Spec v1 changelog: `ARP_Standard/spec/v1/CHANGELOG.md`
-- Python SDK (`arp-standard-py`) release notes live alongside the SDK in `ARP_Standard/sdks/python/`.
+- Spec v1 changelog: `spec/v1/CHANGELOG.md` in `AgentRuntimeProtocol/ARP_Standard`
+- Python package release notes live alongside the packages in:
+  - `models/python/`
+  - `clients/python/`
+  - `kits/python/`
 
 ## JARVIS (implementation changes)
 

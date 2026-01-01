@@ -14,24 +14,29 @@ For JARVIS-specific behavior and defaults, see [JARVIS Implementation](../jarvis
 
 :::
 
-## Where the schemas live (v1)
+## Where the schemas live
 
-- JSON Schemas: `ARP_Standard/spec/v1/schemas/**`
-- OpenAPI contracts: `ARP_Standard/spec/v1/openapi/*.openapi.yaml`
+The canonical schemas live in the `AgentRuntimeProtocol/ARP_Standard` repository:
+
+- JSON Schemas: `spec/v1/schemas/**`
+- OpenAPI contracts: `spec/v1/openapi/*.openapi.yaml`
 - Examples + golden vectors:
-  - Examples: `ARP_Standard/spec/v1/examples/**`
-  - Conformance vectors: `ARP_Standard/spec/v1/conformance/json_vectors/**`
+  - Examples: `spec/v1/examples/**`
+  - Conformance vectors: `spec/v1/conformance/json_vectors/**`
 
-## Schema groups (v1)
+## Schema groups
 
 | Group | What it covers |
 | --- | --- |
 | `common/` | shared types (health, version, errors, extensions, pagination, etc.) |
-| `tool_registry/` | tool definitions and invocation payloads |
-| `runtime/` | run lifecycle payloads |
-| `daemon/` | instance management + routed runs + admin runtime profiles |
-| `trace/` | trace event formats |
-| `memory/` | placeholder namespace reserved for future memory contracts |
+| `core/` | shared domain objects (`Run`, `NodeRun`, `NodeTypeRef`, `RunEvent`, etc.) |
+| `run_gateway/` | run entrypoint payloads (start/get/cancel + optional event streaming) |
+| `run_coordinator/` | run authority + node-run lifecycle payloads |
+| `atomic_executor/` | atomic node-run execution payloads |
+| `composite_executor/` | composite node-run execution payloads |
+| `node_registry/` | node type catalog payloads |
+| `selection/` | candidate set payloads |
+| `pdp/` | policy decision payloads |
 
 ## Key conventions
 
@@ -59,7 +64,7 @@ The nested `error` object is an ARP `Error` (code/message + optional details):
 
 ### Endpoint locator fields
 
-When a schema includes an endpoint field (for example `runtime_selector.runtime_api_endpoint`), the value uses the shared `EndpointLocator` type (a URI string that may be `http://...` or other future schemes like `unix://...`):
+When a schema includes an endpoint field (for example `coordinator_endpoint` in composite execution), the value uses the shared `EndpointLocator` type (a URI string that may be `http://...` or other future schemes like `unix://...`):
 
 - `spec/v1/schemas/common/endpoint_locator.schema.json`
 
@@ -69,15 +74,14 @@ List endpoints that support pagination return a `pagination` object with a `next
 
 - `spec/v1/schemas/common/pagination.schema.json`
 
-### Tracing
+### Event streaming (NDJSON)
 
-Trace payloads use a shared `TraceEvent` format:
+Some services expose optional NDJSON event streams:
+- Run Gateway: `GET /v1/runs/{run_id}/events`
+- Run Coordinator: `GET /v1/runs/{run_id}/events`, `GET /v1/node-runs/{node_run_id}/events`
 
-- `TraceEvent`: `spec/v1/schemas/trace/trace_event.schema.json`
-
-The Daemon `GET /v1/runs/{run_id}/trace` endpoint (optional) returns a `TraceResponse` that may inline `events` and/or return a `trace_uri` pointer:
-
-- `TraceResponse`: `spec/v1/schemas/daemon/runs/trace_response.schema.json`
+The event line shape is `RunEvent`:
+- `spec/v1/schemas/core/run_event.schema.json`
 
 ## Examples + conformance vectors
 

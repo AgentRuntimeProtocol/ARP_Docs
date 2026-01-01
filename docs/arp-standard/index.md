@@ -17,13 +17,13 @@ For a runnable reference implementation, see [JARVIS Implementation](../jarvis/i
 
 ## Who this is for
 
-- Implementers building an ARP **Tool Registry**, **Runtime**, **Daemon**, or even a **Control Plane**.
+- Implementers building ARP Standard v1 services (`Run Gateway`, `Run Coordinator`, executors, registry, selection, `PDP`).
 - Teams validating service conformance
-- Client developers using generated SDKs (for example Python `arp-standard-py` / `arp_sdk`)
+- Client developers using generated packages (for example Python `arp-standard-client` / `arp_standard_client`)
 
 ## Spec layout (v1)
 
-The canonical spec sources live in the [`ARP_Standard` repository](https://GitHub.com/AgentRuntimeProtocol/ARP_Standard) under `spec/v1/`:
+The canonical spec sources live in the [`ARP_Standard` repository](https://github.com/AgentRuntimeProtocol/ARP_Standard) under `spec/v1/`:
 
 - OpenAPI contracts: `spec/v1/openapi/*.openapi.yaml`
 - JSON Schemas: `spec/v1/schemas/**`
@@ -47,29 +47,27 @@ All services MUST implement:
 - `GET /v1/health`
 - `GET /v1/version`
 
-ARP Standard v1 defines three primary HTTP services:
+ARP Standard v1 defines the node-centric execution fabric service set:
 
 | Service | Purpose | OpenAPI | Conformance |
 | --- | --- | --- | --- |
-| [Tool Registry](./components/tool-registry.md) | Tool discovery + invocation | `tool-registry.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
-| [Runtime](./components/runtime.md) | Run execution + lifecycle | `runtime.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
-| [Daemon](./components/daemon.md) | Runtime instances + route runs | `daemon.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
-
-:::note Memory service (WIP)
-
-The v1 spec includes an ARP Memory OpenAPI placeholder (`memory.openapi.yaml`) that currently only defines `GET /v1/health` and `GET /v1/version`. This will be updated once a Memory Service is shaped and integrated.
-
-:::
+| [Run Gateway](./components/run-gateway.md) | Client entrypoint for runs | `run-gateway.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
+| [Run Coordinator](./components/run-coordinator.md) | Run authority + enforcement points | `run-coordinator.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
+| [Atomic Executor](./components/atomic-executor.md) | Execute atomic `NodeRun`s | `atomic-executor.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
+| [Composite Executor](./components/composite-executor.md) | Execute composite `NodeRun`s | `composite-executor.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
+| [Node Registry](./components/node-registry.md) | Catalog `NodeType`s | `node-registry.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
+| [Selection](./components/selection.md) | Generate bounded candidate sets | `selection.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
+| [PDP](./components/pdp.md) | Policy decisions (optional) | `pdp.openapi.yaml` | Required endpoints are listed under [Conformance](./conformance.md). |
 
 ## Start here
 
 - Service responsibilities and required endpoints: [Services](./components/index.md)
 - Shared payload conventions (errors, extensions, endpoint locators): [Data Schemas & Conventions](./data-schemas.md)
 - How conformance is defined and validated: [Conformance](./conformance.md)
-- Generated client SDKs: [SDKs](./sdk/index.md) (Python: [arp_sdk](./sdk/python.md))
+- Generated client SDKs: [SDKs](./sdk/index.md) (Python: [`arp-standard-client`](./sdk/python.md))
 
 ## Relationship to JARVIS
 
 JARVIS is the first-party OSS implementation of ARP. Although it is strictly compliant with ARP Standard, it may include behavior that is not required by (or not yet covered by) the ARP Standard. 
 
-See: [JARVIS Implementation](../jarvis/index.md) and the end-to-end [Quickstart](../quickstart.md).
+See: [JARVIS Implementation](../jarvis/index.md) and the end-to-end [Quickstart](../getting-started/quickstart.md).

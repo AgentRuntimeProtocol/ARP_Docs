@@ -3,78 +3,98 @@ title: Overview for JARVIS Implementation
 sidebar_position: 0
 ---
 
-JARVIS is the first-party, open-source implementation of the **Agent Runtime Protocol (ARP)** ecosystem.
-It provides runnable services and CLIs that implement the **ARP Standard v1** HTTP contracts, plus a small amount of convenience tooling.
+JARVIS is the first-party, open-source **reference stack** for ARP Standard v1.
+
+It provides runnable services (HTTP) and a pinned deployment bundle that implements the **node-centric execution fabric** contracts, plus practical non-spec internal services needed for a real deployment (stores, event streaming, artifacts).
 
 :::note Standard vs. implementation
 
 Normative protocol requirements live under **ARP Standard** (OpenAPI + JSON Schemas + conformance rules).
-This **JARVIS** section documents our first-party implementation of those contracts, including behavior and tooling that is not part of the spec (for example CLIs, defaults, traces, and the optional Control Plane).
+This **JARVIS** section documents our first-party implementation of those contracts, including behavior and tooling that is not part of the spec (for example defaults, operational posture, and non-spec internal services).
 
 :::
 
 ## Who this is for
 
-- You want to run an end-to-end ARP stack locally (Tool Registry + Runtime, optionally a Daemon).
+- You want to run an end-to-end ARP stack locally (recommended: `JARVIS_Release` Docker Compose).
 - You’re implementing your own ARP service and want a reference implementation to compare against.
 - You’re integrating an app against ARP APIs and want a working endpoint to test with.
 
 ## What’s in the stack
 
-| Component | ARP role | How you run it | Purpose | Docs |
-| --- | --- | --- | --- | --- |
-| Tool Registry | Tool Registry service | `arp-jarvis tool-registry` or `arp-jarvis-tool-registry` | Tool discovery + invocation | [Tool Registry](./component-implementations/tool-registry.md) |
-| Runtime | Runtime service | `arp-jarvis runtime …` or `arp-jarvis-runtime …` | Run execution (`/v1/runs`) | [Runtime](./component-implementations/runtime.md) |
-| Daemon | Daemon service | `arp-jarvis daemon …` or `arp-jarvis-daemon …` | Instance management + routed runs | [Daemon](./component-implementations/daemon.md) |
-| Control Plane (WIP) | Not part of ARP Standard | `arp-jarvis-control-plane` | High-level Orchestration Layer | [Control Plane](./component-implementations/control-plane.md) |
+JARVIS is split into multiple repos (one per component). Core components are intended to be versioned in lockstep and pinned via `JARVIS_Release`.
+
+Recommended operating model:
+- **Deploy** using `JARVIS_Release` (Docker Compose, consuming **per-service GHCR images**).
+- **Interact** with the running stack via the `Run Gateway` HTTP API (curl, SDKs, or app integrations).
+- **Run services outside Docker (advanced)** using the single meta CLI `arp-jarvis` (preferred over per-component CLIs).
+
+Execution fabric (ARP Standard v1 services):
+
+| Component | Package | Docs |
+| --- | --- | --- |
+| Run Gateway | `arp-jarvis-rungateway` | [Run Gateway](./component-implementations/run-gateway.md) |
+| Run Coordinator | `arp-jarvis-run-coordinator` | [Run Coordinator](./component-implementations/run-coordinator.md) |
+| Atomic Executor | `arp-jarvis-atomic-executor` | [Atomic Executor](./component-implementations/atomic-executor.md) |
+| Composite Executor | `arp-jarvis-composite-executor` | [Composite Executor](./component-implementations/composite-executor.md) |
+| Node Registry | `arp-jarvis-node-registry` | [Node Registry](./component-implementations/node-registry.md) |
+| Selection Service | `arp-jarvis-selection-service` | [Selection Service](./component-implementations/selection-service.md) |
+| PDP | `arp-jarvis-pdp` | [PDP](./component-implementations/pdp.md) |
+
+Internal services (JARVIS-only, non-spec):
+
+| Component | Package | Notes |
+| --- | --- | --- |
+| Run Store | `arp-jarvis-runstore` | Persistence backing for coordinator (v0.x defaults: SQLite) |
+| Event Stream | `arp-jarvis-eventstream` | NDJSON event persistence + streaming |
+| Artifact Store | `arp-jarvis-artifactstore` | Large I/O backing (v0.x defaults: filesystem) |
 
 :::tip Choosing what to run
 
-- If you want to execute runs against a single runtime, start with **Tool Registry + Runtime**.
-- If you need instance lifecycle management (spawn/register/route), add the **Daemon**.
+If you want a runnable baseline with the fewest moving parts:
+- start with the version-pinned `JARVIS_Release` docker stack (recommended)
+- begin by running the “general planner” composite node (`jarvis.composite.planner.general`)
 
 :::
 
 ## Start here
 
-- New to ARP + JARVIS: follow the [Quickstart](../quickstart.md).
+- New to ARP + JARVIS: follow the [Quickstart](../getting-started/quickstart.md).
+- Auth posture and token exchange: [Authentication in JARVIS](./authentication.md).
 - Understanding the wire contracts: start with [ARP Standard](../arp-standard/index.md) and [ARP Standard: Services](../arp-standard/components/index.md).
-- Running each service + CLI details: see [JARVIS Component Implementations](./component-implementations/index.md).
-- Runtime model/provider configuration: see [Model Integration](./model-integration.md).
-- How-tos and extension guides: browse [User Guides](../guides/index.md).
-- Looking for endpoint/payload reference pages: see [API Reference](../api-reference/index.md).
+- Running each service + configuration: see [JARVIS Component Implementations](./component-implementations/index.md).
+- Looking for endpoint/payload reference pages: see [ARP Standard](../arp-standard/index.md).
 
 ## Packaging
 
-The recommended install is the pinned meta package:
+JARVIS provides a version-pinned meta distribution:
 
-- `arp-jarvis` (installs pinned versions of `arp-standard-py`, `arp-jarvis-tool-registry`, `arp-jarvis-runtime`, `arp-jarvis-daemon`)
-- Meta CLI: `arp-jarvis` (pass-through to the component CLIs; see `arp-jarvis versions`)
+- `arp-jarvis` (pins compatible versions of core JARVIS component packages, plus the first-party node pack)
 
-You can also install component packages directly:
+`arp-jarvis` also provides a single CLI entrypoint:
+- `arp-jarvis versions` (inspect installed pins)
+- `arp-jarvis run-gateway -- ...`, `arp-jarvis run-coordinator -- ...`, etc (pass-through to component CLIs)
 
-- `arp-jarvis-tool-registry`
-- `arp-jarvis-runtime`
-- `arp-jarvis-daemon`
+Docs treat `arp-jarvis` as the **recommended** CLI surface for local/dev usage. Component-specific CLIs still exist but are not the default interface we document.
 
-The Control Plane is an optional, separate package:
+For “full stack bring-up”, prefer a version-pinned stack repo:
+- `AgentRuntimeProtocol/JARVIS_Release`
 
-- `arp-jarvis-control-plane`
+`JARVIS_Release` is also the source of truth for the stack pinning:
+- `stack.lock.json` lists the pinned component versions and corresponding GHCR image references.
+- `compose/docker-compose.yml` consumes the GHCR images using `STACK_VERSION` tags.
+
+You can also install component packages directly (one per service) if you’re running them outside Docker.
 
 :::note Default local ports
 
-By default, JARVIS services commonly bind to:
-
-- Tool Registry: `http://127.0.0.1:8000`
-- Runtime: `http://127.0.0.1:8081`
-- Daemon: `http://127.0.0.1:8082`
-
-The Control Plane defaults to `http://127.0.0.1:8000` (`CP_PORT=8000`), so you may want to change either the Tool Registry port or `CP_PORT` to avoid conflicts.
+Default ports are implementation defaults and may vary by deployment profile.
+See each component’s documentation for its CLI defaults and `.env.example`.
 
 :::
 
 :::caution MVP maturity
 
-JARVIS is intentionally minimal today: there is no built-in authentication, multi-tenancy, or production hardening. Treat it as a development/reference implementation unless you front it with your own controls.
+JARVIS is still early. Treat it as a development/reference implementation unless you have validated your deployment posture (auth, policy, audit retention, and operational hardening).
 
 :::

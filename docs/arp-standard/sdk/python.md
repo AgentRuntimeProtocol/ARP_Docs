@@ -3,84 +3,111 @@ title: Python SDK
 sidebar_position: 1
 ---
 
-The ARP Standard Python SDK is a generated client for the v1 OpenAPI contracts.
+The ARP Standard Python packages are generated from the v1 OpenAPI contracts.
+
+They are intentionally split into three packages:
+- **Models**: `arp-standard-model`
+- **Server base** (FastAPI base servers): `arp-standard-server`
+- **Clients** (typed HTTP clients): `arp-standard-client`
 
 :::note Standard vs. implementation
 
-This SDK is generated from the **ARP Standard** spec and can be used with any conformant Tool Registry / Runtime / Daemon.
-It is not specific to JARVIS.
+These packages are generated from the **ARP Standard** spec and can be used with any conformant ARP Standard v1 service.
+They are not specific to JARVIS.
 
 :::
 
-## Package
+## Packages
 
-- PyPI distribution: `arp-standard-py`
-- Import package: `arp_sdk`
-- Python requirement: `>=3.10`
-- Package README: `ARP_Standard/sdks/python/README.md`
+- Model PyPI distribution: `arp-standard-model` (imports: `arp_standard_model`)
+- Server base PyPI distribution: `arp-standard-server` (imports: `arp_standard_server`)
+- Client PyPI distribution: `arp-standard-client` (imports: `arp_standard_client`)
+- Python requirement: `>=3.11`
+- Package READMEs:
+  - `ARP_Standard/clients/python/README.md`
+  - `ARP_Standard/models/python/README.md`
+  - `ARP_Standard/kits/python/README.md` (server base / kit)
 
 ## Install
 
+Client + models (calling ARP services):
 ```bash
-python3 -m pip install arp-standard-py
+python3 -m pip install arp-standard-client
+```
+
+Server base + models (implementing ARP services):
+```bash
+python3 -m pip install arp-standard-server
 ```
 
 ## Clients
 
-- `arp_sdk.tool_registry.ToolRegistryClient` (Tool Registry API)
-- `arp_sdk.runtime.RuntimeClient` (Runtime API)
-- `arp_sdk.daemon.DaemonClient` (Daemon API)
+One facade client is generated per ARP Standard v1 service:
+
+- `arp_standard_client.run_gateway.RunGatewayClient`
+- `arp_standard_client.run_coordinator.RunCoordinatorClient`
+- `arp_standard_client.atomic_executor.AtomicExecutorClient`
+- `arp_standard_client.composite_executor.CompositeExecutorClient`
+- `arp_standard_client.node_registry.NodeRegistryClient`
+- `arp_standard_client.selection.SelectionClient`
+- `arp_standard_client.pdp.PdpClient`
 
 Each client takes a `base_url` that points at the corresponding service endpoint.
 
-## Basic usage (Daemon example)
+## Basic usage (Run Gateway example)
 
-This example checks health and creates a runtime instance (if your daemon supports managed instances):
-
-```python
-from arp_sdk.daemon import DaemonClient
-from arp_sdk.models import InstanceCreateRequest
-
-daemon = DaemonClient(base_url="http://<daemon-host>:<port>")
-
-health = daemon.health()
-print(health.to_dict())
-
-created = daemon.create_instances(InstanceCreateRequest(runtime_profile="default", count=1))
-print(created.to_dict())
-```
-
-Submitting a run via the Daemon:
+This example checks health and starts a run:
 
 ```python
-import time
+from arp_standard_client.run_gateway import RunGatewayClient
+from arp_standard_model import (
+    NodeTypeRef,
+    RunGatewayHealthRequest,
+    RunGatewayStartRunRequest,
+    RunStartRequest,
+)
 
-from arp_sdk.daemon import DaemonClient
-from arp_sdk.models import RunRequest
+# If you started the pinned stack via `JARVIS_Release` Docker Compose, Run Gateway is exposed on `8081`.
+gateway = RunGatewayClient(base_url="http://127.0.0.1:8081")
 
-daemon = DaemonClient(base_url="http://<daemon-host>:<port>")
-status = daemon.submit_run(RunRequest.from_dict({"input": {"goal": "hello"}}))
+health = gateway.health(RunGatewayHealthRequest())
+print(health.model_dump(exclude_none=True))
 
-# Poll until the run reaches a terminal state, then fetch the result.
-while status.state.value not in {"succeeded", "failed", "canceled"}:
-    time.sleep(0.2)
-    status = daemon.get_run_status(status.run_id)
-
-result = daemon.get_run_result(status.run_id)
-print(result.to_dict())
+run = gateway.start_run(
+    RunGatewayStartRunRequest(
+        body=RunStartRequest(
+            root_node_type_ref=NodeTypeRef(node_type_id="jarvis.composite.planner.general", version="0.3.3"),
+            input={"goal": "Generate a UUID, then return it."},
+        )
+    )
+)
+print(run.model_dump(exclude_none=True))
 ```
 
 ## Errors
 
-The facade clients raise `arp_sdk.errors.ArpApiError` when the API returns an `ErrorEnvelope`.
+The facade clients raise `arp_standard_client.errors.ArpApiError` when the API returns an `ErrorEnvelope`.
+
+## Server base (FastAPI)
+
+If you’re implementing an ARP Standard service, use `arp-standard-server` so your server:
+- stays aligned with the OpenAPI contract (request/response envelopes),
+- returns ARP `ErrorEnvelope`s consistently (instead of framework-specific payloads),
+- exposes required endpoints (health/version) “conformant-by-construction”.
+
+Each ARP service has a matching base class under `arp_standard_server.<service>`.
 
 ## Generate locally
 
 If you want to see the code gen pipeline run locally, run these from the `ARP_Standard` repository root:
 
 ```bash
-python3 -m pip install -r tools/codegen/python/requirements.txt
-python3 tools/codegen/python/generate.py --version v1
+python3 -m pip install -r tools/codegen/python/model/requirements.txt
+python3 -m pip install -r tools/codegen/python/client/requirements.txt
+python3 -m pip install -r tools/codegen/python/server/requirements.txt
+python3 tools/codegen/python/model/generate.py
+python3 tools/codegen/python/client/generate.py
+python3 tools/codegen/python/server/generate.py
 ```
 
 See also: `ARP_Standard/tools/codegen/python/README.md`.

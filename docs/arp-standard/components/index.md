@@ -22,72 +22,69 @@ Each service **MUST** implement:
 
 | Service | Purpose | OpenAPI |
 | --- | --- | --- |
-| [Tool Registry](./tool-registry.md) | Tool discovery + invocation | `tool-registry.openapi.yaml` |
-| [Runtime](./runtime.md) | Run execution lifecycle | `runtime.openapi.yaml` |
-| [Daemon](./daemon.md) | Runtime instances + routed runs | `daemon.openapi.yaml` |
+| [Run Gateway](./run-gateway.md) | Client entrypoint for runs | `run-gateway.openapi.yaml` |
+| [Run Coordinator](./run-coordinator.md) | Run authority + enforcement points | `run-coordinator.openapi.yaml` |
+| [Atomic Executor](./atomic-executor.md) | Execute atomic `NodeRun`s | `atomic-executor.openapi.yaml` |
+| [Composite Executor](./composite-executor.md) | Execute composite `NodeRun`s | `composite-executor.openapi.yaml` |
+| [Node Registry](./node-registry.md) | Catalog `NodeType`s | `node-registry.openapi.yaml` |
+| [Selection](./selection.md) | Generate bounded candidate sets | `selection.openapi.yaml` |
+| [PDP](./pdp.md) | Policy decisions (optional) | `pdp.openapi.yaml` |
 
 Required endpoints per service are defined by:
 
 - OpenAPI documents under `ARP_Standard/spec/v1/openapi/`
 - The conformance required endpoints list: `ARP_Standard/spec/v1/conformance/rules/required.md`
 
-## Tool Registry
+## Run Gateway
 
-Purpose: tool discovery + invocation.
-
-Required endpoints:
-
-- `GET /v1/tools`
-- `GET /v1/tools/{tool_id}`
-- `POST /v1/tool-invocations`
-
-OpenAPI: `ARP_Standard/spec/v1/openapi/tool-registry.openapi.yaml`
-
-Details: [Tool Registry](./tool-registry.md)
-
-## Runtime
-
-Purpose: execute runs.
+Purpose: client entrypoint for starting/querying/canceling runs (+ optional NDJSON streaming).
 
 Required endpoints:
 
 - `POST /v1/runs`
 - `GET /v1/runs/{run_id}`
-- `GET /v1/runs/{run_id}/result`
-
-Optional endpoints (not required for conformance):
-
 - `POST /v1/runs/{run_id}:cancel`
-- `GET /v1/runs/{run_id}/events` (SSE)
 
-OpenAPI: `ARP_Standard/spec/v1/openapi/runtime.openapi.yaml`
+Optional endpoint:
 
-Details: [Runtime](./runtime.md)
+- `GET /v1/runs/{run_id}/events` (NDJSON)
 
-## Daemon
+OpenAPI: `ARP_Standard/spec/v1/openapi/run-gateway.openapi.yaml`
 
-Purpose: manage runtime instances and route run requests to them.
+Details: [Run Gateway](./run-gateway.md)
+
+## Run Coordinator
+
+Purpose: the run authority. Owns `Run` + `NodeRun` lifecycle, enforcement checkpoints, scheduling/dispatch, and durable history.
 
 Required endpoints:
 
-- Instances: `GET /v1/instances`, `POST /v1/instances`, `DELETE /v1/instances/{instance_id}`
-- External instances: `POST /v1/instances:register`
-- Runtime profiles (safe list): `GET /v1/admin/runtime-profiles`, `PUT /v1/admin/runtime-profiles/{runtime_profile}`, `DELETE /v1/admin/runtime-profiles/{runtime_profile}`
-- Runs: `GET /v1/runs`, `POST /v1/runs`, `GET /v1/runs/{run_id}`, `GET /v1/runs/{run_id}/result`
+- `POST /v1/runs`
+- `GET /v1/runs/{run_id}`
+- `POST /v1/runs/{run_id}:cancel`
+- `POST /v1/node-runs` (create subtasks)
+- `GET /v1/node-runs/{node_run_id}`
+- `POST /v1/node-runs/{node_run_id}:evaluation`
+- `POST /v1/node-runs/{node_run_id}:complete`
 
-Optional endpoint (not required for conformance):
+Optional endpoints (not required for conformance):
 
-- `GET /v1/runs/{run_id}/trace`
+- `GET /v1/runs/{run_id}/events` (NDJSON)
+- `GET /v1/node-runs/{node_run_id}/events` (NDJSON)
 
-OpenAPI: `ARP_Standard/spec/v1/openapi/daemon.openapi.yaml`
+OpenAPI: `ARP_Standard/spec/v1/openapi/run-coordinator.openapi.yaml`
 
-Details: [Daemon](./daemon.md)
+Details: [Run Coordinator](./run-coordinator.md)
 
-:::note Memory service (placeholder)
+## Executors, registry, selection, PDP
 
-The v1 spec also includes an ARP Memory OpenAPI placeholder (`memory.openapi.yaml`) that currently only defines `GET /v1/health` and `GET /v1/version`.
+These services are referenced throughout the execution fabric:
 
-:::
+- Atomic Executor: [Atomic Executor](./atomic-executor.md)
+- Composite Executor: [Composite Executor](./composite-executor.md)
+- Node Registry: [Node Registry](./node-registry.md)
+- Selection: [Selection](./selection.md)
+- PDP: [PDP](./pdp.md)
 
 ## See also
 

@@ -3,31 +3,27 @@ title: MCP Integration
 sidebar_position: 1
 ---
 
-This page describes where MCP-style tool servers would plug into an ARP deployment.
+This page describes where MCP-style tool servers plug into a node-centric ARP deployment.
 
 :::caution WIP
 
-The first-party JARVIS Tool Registry does **not** ship MCP aggregation yet. This page is intentionally a high-level stub. Work is ongoing.
+The first-party JARVIS stack does not ship a built-in MCP aggregator yet. This page focuses on the intended *integration shape*.
 
 :::
 
 ## Where it fits
 
-MCP integration (when added) belongs behind an **ARP Tool Registry**. The Tool Registry is the only standardized “tool surface” in ARP:
+In ARP v1, the “action surface” is expressed as **`NodeType`s**.
 
-- discovery: `GET /v1/tools` and `GET /v1/tools/{tool_id}`
-- invocation: `POST /v1/tool-invocations`
+The recommended integration approach is:
+- expose MCP tools as **atomic `NodeType`s**, and
+- execute them via the **`Atomic Executor`** (in-process trusted packs) or via a wrapper service (remote-only).
 
-An MCP-aware Tool Registry would:
-
-- expose MCP-provided tools as ARP `ToolDefinition` objects
-- route ARP tool invocations to the correct MCP server
-- normalize responses into ARP `ToolInvocationResult` (and transport errors into `ErrorEnvelope`)
-
-If you need this today, implement your own Tool Registry that conforms to the ARP Standard v1 contract.
+`Selection` can then treat MCP-provided capabilities the same way it treats first-party ones: as catalog entries with schemas, descriptions, and governance metadata.
 
 ## Related docs
 
-- [ARP Standard: Tool Registry](../arp-standard/components/tool-registry.md)
-- [JARVIS Tool Registry implementation](../jarvis/component-implementations/tool-registry.md)
+- [Concept: Candidate Sets](../fundamentals/concepts/candidate-sets.md)
+- [ARP Standard: Atomic Executor](../arp-standard/components/atomic-executor.md)
+- [JARVIS Atomic Executor](../jarvis/component-implementations/atomic-executor.md)
 - [Roadmap](../resources/roadmap.md)

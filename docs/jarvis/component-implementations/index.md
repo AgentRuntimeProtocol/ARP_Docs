@@ -14,40 +14,41 @@ If you’re looking for normative endpoints and schemas (what every conformant s
 
 ## How the pieces fit together
 
-- The **Runtime** executes runs and calls tools via the **Tool Registry**.
-- The **Daemon** manages Runtime instances (spawn/register/list) and routes run requests to them.
-- The **Control Plane** is an optional UI/API layer on top of a running Daemon (not part of ARP Standard).
+JARVIS is a node-centric execution fabric:
+
+- **`Run Gateway`** is the client entrypoint (stateless proxy).
+- **`Run Coordinator`** is the run authority (system-of-record; enforcement and dispatch).
+- **`Atomic Executor`** executes atomic `NodeRun`s.
+- **`Composite Executor`** executes composite `NodeRun`s (planning + binding + arg-gen).
+- **`Node Registry`** catalogs `NodeType`s.
+- **`Selection Service`** produces bounded candidate sets.
+- **`PDP`** returns allow/deny decisions (optional).
+
+Internal persistence/services used by the coordinator:
+- `Run Store`
+- `Event Stream`
+- `Artifact Store`
 
 ## Components
 
-| Component | Purpose | Default local URL | Docs |
-| --- | --- | --- | --- |
-| Tool Registry | Tool discovery + invocation | `http://127.0.0.1:8000` | [Tool Registry](./tool-registry.md) |
-| Runtime | Run execution | `http://127.0.0.1:8081` | [Runtime](./runtime.md) |
-| Daemon | Instance mgmt + routed runs | `http://127.0.0.1:8082` | [Daemon](./daemon.md) |
-| Control Plane | High-level agent orchestration and observability | TBD | [Control Plane](./control-plane.md) |
+Recommended local deployment is via the version-pinned `JARVIS_Release` Docker Compose stack (GHCR images).
+
+| Component | Compose service | Internal URL | Exposed host URL | Docs |
+| --- | --- | --- | --- | --- |
+| Run Gateway | `run-gateway` | `http://run-gateway:8080` | `http://127.0.0.1:8081` | [Run Gateway](./run-gateway.md) |
+| Run Coordinator | `run-coordinator` | `http://run-coordinator:8081` | `http://127.0.0.1:8082` | [Run Coordinator](./run-coordinator.md) |
+| Atomic Executor | `atomic-executor` | `http://atomic-executor:8082` | (not exposed) | [Atomic Executor](./atomic-executor.md) |
+| Composite Executor | `composite-executor` | `http://composite-executor:8083` | (not exposed) | [Composite Executor](./composite-executor.md) |
+| Node Registry | `node-registry` | `http://node-registry:8084` | (not exposed) | [Node Registry](./node-registry.md) |
+| Selection Service | `selection-service` | `http://selection-service:8085` | (not exposed) | [Selection Service](./selection-service.md) |
+| PDP | `pdp` | `http://pdp:8086` | (not exposed) | [PDP](./pdp.md) |
+
+Notes:
+- Exposed ports are the default `JARVIS_Release` host port mappings and may vary by profile.
+- To debug a non-exposed service, either `docker compose exec` into the network or temporarily add a `ports:` mapping in `compose/docker-compose.yml`.
 
 ## Common conventions
 
-- **ARP Standard SDK**: components use the ARP Standard Python SDK (`arp-standard-py` / `arp_sdk`) for typed payloads.
+- **ARP Standard Python packages**: components use `arp-standard-model`, `arp-standard-client`, and `arp-standard-server` for spec-aligned types and scaffolding.
 - **Versioned HTTP APIs**: ARP services use `/v1/...` endpoints and expose `GET /v1/health` + `GET /v1/version`.
-- **Local-first defaults**: services default to `127.0.0.1` and common ports (see table above).
-
-## Pinned stack CLI (optional)
-
-The `arp-jarvis` meta package installs a pinned, known-compatible stack and provides a pass-through CLI:
-
-- `arp-jarvis versions`
-- `arp-jarvis tool-registry …`
-- `arp-jarvis runtime …`
-- `arp-jarvis daemon …`
-
-:::tip Use component CLIs directly
-
-You can also run the underlying CLIs directly:
-
-- `arp-jarvis-tool-registry`
-- `arp-jarvis-runtime`
-- `arp-jarvis-daemon`
-
-:::
+- **Recommended bring-up**: for most users, `JARVIS_Release` Docker Compose is the supported way to run JARVIS locally and in production-like environments.
