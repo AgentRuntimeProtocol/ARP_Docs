@@ -76,4 +76,4 @@ jobs:
         run: |
           set -euo pipefail
           distribution_id="${DISTRIBUTION_INPUT##*/}"
-          aws cloudfront create-invalidation --distribution-id "${distribution_id}" --paths "/public_docs*"
+          aws cloudfront create-invalidation --distribution-id "${distribution_id}" --paths "/*"
