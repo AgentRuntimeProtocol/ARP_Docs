@@ -85,7 +85,7 @@ curl -sS http://127.0.0.1:8082/v1/health
 
 :::
 
-### Recommended: install the meta CLI `arp-jarvis`:
+### Recommended: install the meta CLI `arp-jarvis`
 
 `arp-jarvis` is a meta CLI tool for simplifying interactions with the deployed JARVIS Stack. 
 
