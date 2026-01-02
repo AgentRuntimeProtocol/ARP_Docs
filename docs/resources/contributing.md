@@ -42,7 +42,7 @@ npm install
 npm run start
 ```
 
-Then open `http://localhost:3000/public_docs/`.
+Then open `http://localhost:3000/`.
 
 To build the static site:
 

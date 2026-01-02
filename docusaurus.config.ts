@@ -7,8 +7,8 @@ const config: Config = {
   tagline: "API Documentation",
   favicon: "img/ARP_Transparent.png",
 
-  url: "https://agent-runtime-protocol.com",
-  baseUrl: "/public_docs/",
+  url: "https://docs.agent-runtime-protocol.com",
+  baseUrl: "/",
 
   organizationName: "arp",
   projectName: "ARP_Docs",

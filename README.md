@@ -11,7 +11,7 @@ npm install
 npm run start
 ```
 
-Then open `http://localhost:3000/public_docs/` in your browser (the dev server does not auto-open a browser).
+Then open `http://localhost:3000/` in your browser (the dev server does not auto-open a browser).
 
 ## Build
 
@@ -20,4 +20,3 @@ npm run build
 ```
 
 Build output is written to `build/`.
-
