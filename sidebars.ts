@@ -11,8 +11,8 @@ import { resourcesSidebar } from "./docs/resources/sidebar";
 
 const sidebars: SidebarsConfig = {
   defaultSidebar: [
-    ...fundamentalsSidebar,
     ...gettingStartedSidebar,
+    ...fundamentalsSidebar,
     ...arpStandardSidebar,
     ...jarvisSidebar,
     ...howToSidebar,
