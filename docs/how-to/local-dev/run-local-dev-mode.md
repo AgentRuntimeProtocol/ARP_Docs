@@ -24,7 +24,7 @@ You will bring up a full JARVIS stack locally with **inbound JWT validation disa
 
    ```bash
    cd JARVIS_Release
-   bash ./start_dev_insecure.sh \
+   bash ./start_dev.sh \
      --llm-api-key "<your_openai_api_key>" \
      --llm-chat-model "gpt-4.1-mini"
    ```
