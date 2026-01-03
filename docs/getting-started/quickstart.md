@@ -133,7 +133,7 @@ For the default “general planner” composite flow, use the built-in NodeType:
 Start a run:
 
 ```bash
-RUN_ID="$(arp-jarvis runs start --goal "Generate a UUID, then return it." -o json | \
+RUN_ID="$(arp-jarvis --json runs start --goal "Generate a UUID, then return it." | \
   python3 -c 'import json,sys; print(json.load(sys.stdin)["run"]["run_id"])')"
 
 echo "run_id: ${RUN_ID}"
