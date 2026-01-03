@@ -32,8 +32,8 @@ The exact refs are pinned in `stack.lock.json`.
 
 ## How you use it
 
-- Bring up the stack with Docker Compose (see [Quickstart](../getting-started/quickstart.md)).
-- Talk to the stack through the **Run Gateway** API (client entrypoint).
+- Bring up the stack with `arp-jarvis stack` (CLI wrapper over Docker Compose; see [Quickstart](../getting-started/quickstart.md)).
+- Interact with the stack via `arp-jarvis runs` (preferred for local/dev) or the **Run Gateway** API (client entrypoint).
 - Use `arp-jarvis` (meta CLI) for advanced local/dev workflows (running services outside Docker, inspecting pins).
 
 ## Profiles

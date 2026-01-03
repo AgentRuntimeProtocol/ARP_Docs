@@ -33,12 +33,15 @@ You will understand how to pin (or upgrade) the version-pinned JARVIS stack dist
 3. Restart the stack using the new pin:
 
    ```bash
-   docker compose --env-file compose/.env.local -f compose/docker-compose.yml up -d
+   python3 -m pip install -e .
+   arp-jarvis stack pull
+   arp-jarvis stack up -d
+   arp-jarvis doctor
    ```
 
 ## Verify
 
-- `docker compose ps` shows all services running.
+- `arp-jarvis doctor` shows all core services healthy.
 - Run Gateway health is OK:
 
   ```bash
@@ -47,13 +50,13 @@ You will understand how to pin (or upgrade) the version-pinned JARVIS stack dist
 
 ## Troubleshooting
 
-- New version fails to start → check logs (`docker compose logs -f <service>`), then roll back to the previous tag.
-- You changed `STACK_VERSION` but are still running old images → run `docker compose pull` then re-run `docker compose up -d`.
+- New version fails to start → check logs (`arp-jarvis stack logs -f <service>`), then roll back to the previous tag.
+- You changed `STACK_VERSION` but are still running old images → run `arp-jarvis stack pull` then re-run `arp-jarvis stack up -d`.
 - You see schema mismatches across services → confirm all components are pinned to the same stack version in `stack.lock.json`.
 
 ## Cleanup / Rollback
 
-- Roll back by checking out the previous tag and re-running `docker compose up -d`.
+- Roll back by checking out the previous tag and re-running `arp-jarvis stack up -d`.
 
 ## Next steps
 

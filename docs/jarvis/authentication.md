@@ -57,18 +57,24 @@ For real deployments, generate unique client secrets and inject them via your pl
 
 In `dev-secure-keycloak`, `/v1/health` and `/v1/version` are unauthenticated, but API calls like `POST /v1/runs` require `Authorization: Bearer <token>`.
 
-The simplest dev token is a **client-credentials** token minted from the local Keycloak realm using the `arp-run-gateway` client secret:
+Recommended dev flow: use the stack-aware CLI (device/browser flow, no service secrets):
 
 ```bash
-curl -sS \
-  -X POST \
-  http://localhost:8080/realms/arp-dev/protocol/openid-connect/token \
-  -d 'grant_type=client_credentials' \
-  -d 'client_id=arp-run-gateway' \
-  -d 'client_secret=arp-run-gateway-secret'
+arp-jarvis auth login
+TOKEN="$(arp-jarvis auth token --audience arp-run-gateway)"
 ```
 
 Use the returned `access_token` as the bearer token when calling Run Gateway.
+
+Default dev user for the local realm:
+- username: `dev`
+- password: `dev`
+
+For scripting, you can use:
+
+```bash
+TOKEN="$(arp-jarvis auth token --audience arp-run-gateway)"
+```
 
 ## Which components need a client secret?
 

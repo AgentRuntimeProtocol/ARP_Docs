@@ -16,7 +16,7 @@ This **JARVIS** section documents our first-party implementation of those contra
 
 ## Who this is for
 
-- You want to run an end-to-end ARP stack locally (recommended: `JARVIS_Release` Docker Compose).
+- You want to run an end-to-end ARP stack locally (recommended: `JARVIS_Release` + `arp-jarvis stack`).
 - You’re implementing your own ARP service and want a reference implementation to compare against.
 - You’re integrating an app against ARP APIs and want a working endpoint to test with.
 
@@ -25,8 +25,8 @@ This **JARVIS** section documents our first-party implementation of those contra
 JARVIS is split into multiple repos (one per component). Core components are intended to be versioned in lockstep and pinned via `JARVIS_Release`.
 
 Recommended operating model:
-- **Deploy** using `JARVIS_Release` (Docker Compose, consuming **per-service GHCR images**).
-- **Interact** with the running stack via the `Run Gateway` HTTP API (curl, SDKs, or app integrations).
+- **Deploy** using `JARVIS_Release` (Docker Compose stack managed via `arp-jarvis stack`, consuming **per-service GHCR images**).
+- **Interact** with the running stack via `arp-jarvis runs` (preferred for local/dev), or the `Run Gateway` HTTP API (curl, SDKs, app integrations).
 - **Run services outside Docker (advanced)** using the single meta CLI `arp-jarvis` (preferred over per-component CLIs).
 
 Execution fabric (ARP Standard v1 services):
@@ -52,7 +52,7 @@ Internal services (JARVIS-only, non-spec):
 :::tip Choosing what to run
 
 If you want a runnable baseline with the fewest moving parts:
-- start with the version-pinned `JARVIS_Release` docker stack (recommended)
+- start with the version-pinned `JARVIS_Release` stack and use `arp-jarvis stack` (recommended)
 - begin by running the “general planner” composite node (`jarvis.composite.planner.general`)
 
 :::
@@ -73,11 +73,14 @@ JARVIS provides a version-pinned meta distribution:
 
 `arp-jarvis` also provides a single CLI entrypoint:
 - `arp-jarvis versions` (inspect installed pins)
+- `arp-jarvis stack up|down|logs|ps` (manage the local Compose stack)
+- `arp-jarvis doctor` (quick diagnostics)
+- `arp-jarvis runs start|get|events|inspect` (interact with Run Gateway)
 - `arp-jarvis run-gateway -- ...`, `arp-jarvis run-coordinator -- ...`, etc (pass-through to component CLIs)
 
 Docs treat `arp-jarvis` as the **recommended** CLI surface for local/dev usage. Component-specific CLIs still exist but are not the default interface we document.
 
-For “full stack bring-up”, prefer a version-pinned stack repo:
+For “full stack bring-up”, prefer a version-pinned stack repo and manage it with `arp-jarvis stack`:
 - `AgentRuntimeProtocol/JARVIS_Release`
 
 `JARVIS_Release` is also the source of truth for the stack pinning:

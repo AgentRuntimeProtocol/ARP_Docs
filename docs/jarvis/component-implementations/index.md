@@ -31,7 +31,7 @@ Internal persistence/services used by the coordinator:
 
 ## Components
 
-Recommended local deployment is via the version-pinned `JARVIS_Release` Docker Compose stack (GHCR images).
+Recommended local deployment is via the version-pinned `JARVIS_Release` stack managed with `arp-jarvis stack` (GHCR images).
 
 | Component | Compose service | Internal URL | Exposed host URL | Docs |
 | --- | --- | --- | --- | --- |
@@ -45,10 +45,10 @@ Recommended local deployment is via the version-pinned `JARVIS_Release` Docker C
 
 Notes:
 - Exposed ports are the default `JARVIS_Release` host port mappings and may vary by profile.
-- To debug a non-exposed service, either `docker compose exec` into the network or temporarily add a `ports:` mapping in `compose/docker-compose.yml`.
+- To debug a non-exposed service, use `arp-jarvis stack exec <service> -- <cmd>` (or `docker compose exec`) or temporarily add a `ports:` mapping in `compose/docker-compose.yml`.
 
 ## Common conventions
 
 - **ARP Standard Python packages**: components use `arp-standard-model`, `arp-standard-client`, and `arp-standard-server` for spec-aligned types and scaffolding.
 - **Versioned HTTP APIs**: ARP services use `/v1/...` endpoints and expose `GET /v1/health` + `GET /v1/version`.
-- **Recommended bring-up**: for most users, `JARVIS_Release` Docker Compose is the supported way to run JARVIS locally and in production-like environments.
+- **Recommended bring-up**: for most users, `JARVIS_Release` + `arp-jarvis stack` is the supported way to run JARVIS locally and in production-like environments.

@@ -14,6 +14,7 @@ You will bring up a full JARVIS stack locally with the **Keycloak dev STS** prof
 ## Prerequisites
 
 - Docker + Docker Compose
+- Python `>=3.11` + `pip` (for `arp-jarvis`)
 - A local checkout of `JARVIS_Release`
 
 ## Steps
@@ -32,26 +33,40 @@ You will bring up a full JARVIS stack locally with the **Keycloak dev STS** prof
    # STACK_PROFILE=dev-secure-keycloak
    ```
 
-3. Start the stack:
+3. Install the CLI:
 
    ```bash
-   docker compose --env-file compose/.env.local -f compose/docker-compose.yml up -d
+   python3 -m pip install -e .
+   arp-jarvis versions
    ```
 
-4. Check Run Gateway health:
+4. Start the stack and verify wiring:
 
    ```bash
-   curl -sS http://localhost:8081/v1/health
+   arp-jarvis stack pull
+   arp-jarvis stack up -d
+   arp-jarvis doctor
    ```
+
+5. Log in once (device/browser flow) and start a run:
+
+   ```bash
+   arp-jarvis auth login
+   arp-jarvis runs start --goal "Generate a UUID, then return it."
+   ```
+
+   Default dev user in the local realm (for the browser step):
+   - username: `dev`
+   - password: `dev`
 
 ## Verify
 
-- `curl` returns HTTP `200`.
+- `arp-jarvis doctor` shows Run Gateway, Run Coordinator, and Keycloak as healthy.
 - Keycloak is reachable on `http://localhost:8080` (default).
 
 ## Troubleshooting
 
-- Health is `degraded` because Keycloak isn’t ready yet → wait 10–30 seconds, then retry; check `docker compose logs -f keycloak`.
+- Health is `degraded` because Keycloak isn’t ready yet → wait 10–30 seconds, then retry; check `arp-jarvis stack logs -f keycloak`.
 - You changed `KEYCLOAK_HOST_PORT` but did not update `ARP_AUTH_ISSUER` → update `ARP_AUTH_ISSUER` in `compose/profiles/dev-secure-keycloak.env`.
 - You see auth errors between services → confirm the `ARP_*_CLIENT_SECRET` values in `compose/.env.local` match `compose/keycloak/realm-arp-dev.json`.
 
@@ -60,8 +75,15 @@ You will bring up a full JARVIS stack locally with the **Keycloak dev STS** prof
 - Stop the stack (keeps volumes):
 
   ```bash
-  docker compose --env-file compose/.env.local -f compose/docker-compose.yml down
+  arp-jarvis stack down
   ```
+
+## Docker Compose fallback (no CLI)
+
+```bash
+docker compose --env-file compose/.env.local -f compose/docker-compose.yml up -d
+curl -sS http://localhost:8081/v1/health
+```
 
 ## Next steps
 

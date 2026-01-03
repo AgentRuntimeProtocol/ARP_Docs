@@ -14,7 +14,7 @@ You will wipe local durable state for a JARVIS dev stack (Run Store, Event Strea
 ## Prerequisites
 
 - Docker + Docker Compose
-- You are running the stack via `JARVIS_Release/compose/docker-compose.yml`
+- You are running the stack via `JARVIS_Release` (typically with `arp-jarvis stack`)
 - You understand this is **destructive** (it deletes local volumes).
 
 ## Steps
@@ -23,7 +23,7 @@ You will wipe local durable state for a JARVIS dev stack (Run Store, Event Strea
 
    ```bash
    cd JARVIS_Release
-   docker compose --env-file compose/.env.local -f compose/docker-compose.yml down -v
+   arp-jarvis stack down --volumes
    ```
 
 2. (Optional) Remove any dangling images built locally:
@@ -39,7 +39,7 @@ You will wipe local durable state for a JARVIS dev stack (Run Store, Event Strea
 ## Troubleshooting
 
 - `compose/.env.local` not found → you didn’t create it yet → `cp compose/.env.example compose/.env.local`.
-- “volume is in use” → containers are still running → `docker compose ps` then stop them, or `docker ps` and stop manually.
+- “volume is in use” → containers are still running → `arp-jarvis stack ps` then stop them, or `docker ps` and stop manually.
 - You only want to wipe one store (not all) → don’t use `-v`; remove the specific volume by name with `docker volume rm <name>`.
 
 ## Cleanup / Rollback

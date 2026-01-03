@@ -19,8 +19,7 @@ The ARP Standard is versioned by API namespace (for example `/v1/...`). When the
 #### The JARVIS Stack
 
 JARVIS is the first-party OSS implementation stack. Implementation details and CLI UX may evolve as the stack matures.
-For deployment and local bring-up, use the version-pinned `JARVIS_Release` Docker Compose stack (recommended).
-For running services outside Docker (advanced), install the version-pinned meta package `arp-jarvis` and use its single CLI entrypoint.
+For deployment and local bring-up, use the version-pinned `JARVIS_Release` stack and the `arp-jarvis` CLI.
 </details>
 
 This documentation is kept up-to-date to the latest release of both the *ARP Standard* and the *JARVIS* OSS Stack.
@@ -63,7 +62,7 @@ See ARP run with the end-to-end Quickstart on the JARVIS first party OSS referen
 For local bring-up and repeatable builds, prefer the version-pinned stack distribution repo:
 - `JARVIS_Release` (Docker Compose baseline + `stack.lock.json`)
 
-You can still run services outside Docker by installing the pinned meta distribution (`arp-jarvis`), but that is an advanced path.
+Use `arp-jarvis stack` as the default way to bring the stack up and down. Running services outside Docker is supported but is considered an advanced path.
 
 :::
 

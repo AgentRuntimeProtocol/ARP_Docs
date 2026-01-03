@@ -24,10 +24,10 @@ You will bring up a full JARVIS stack locally and start one sample composite `Ru
 
 ## Verify
 
-- Run Gateway health returns `200`:
+- Run Gateway health returns `ok`:
 
   ```bash
-  curl -sS http://localhost:8081/v1/health
+  arp-jarvis doctor
   ```
 
 - You can start a run:
@@ -35,7 +35,7 @@ You will bring up a full JARVIS stack locally and start one sample composite `Ru
 
 ## Troubleshooting
 
-- The Quickstart uses many terminals / env vars → prefer `JARVIS_Release` to run the full stack with Docker Compose.
+- The Quickstart uses many terminals / env vars → prefer `JARVIS_Release` + `arp-jarvis stack` for full-stack bring-up.
 - Ports already in use → change host ports in `JARVIS_Release/compose/.env.local`.
 - Auth failures (`401`/`403`) → confirm your `STACK_PROFILE` and Keycloak issuer settings.
 
@@ -45,7 +45,7 @@ You will bring up a full JARVIS stack locally and start one sample composite `Ru
 
   ```bash
   cd JARVIS_Release
-  docker compose --env-file compose/.env.local -f compose/docker-compose.yml down
+  arp-jarvis stack down
   ```
 
 ## Next steps

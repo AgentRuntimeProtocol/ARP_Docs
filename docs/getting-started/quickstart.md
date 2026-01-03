@@ -17,10 +17,10 @@ This Quickstart focuses on running the JARVIS stack. For ARP contracts (OpenAPI/
 - `curl`
 - `git` (recommended)
 - Docker + Docker Compose
+- Python `>=3.11` + `pip`
 - An OpenAI API key (required for the default JARVIS stack; `Selection Service` + `Composite Executor` are LLM-driven)
 
 Optional:
-- Python `>=3.11` if you want to use the Python SDK locally
 - For offline tests, if you don't want to make real LLM calls, you can opt into `dev-mock` via `ARP_LLM_PROFILE=dev-mock`
 
 :::
@@ -55,45 +55,69 @@ Edit `compose/.env.local`:
   - `ARP_LLM_API_KEY`
   - `ARP_LLM_CHAT_MODEL` (example: `gpt-4.1-mini`)
 
-For trying JARVIS out, you should switch to the `dev-insecure` security profile, it disables inter-service JWT validation to make things easier:
-- Set `STACK_PROFILE=dev-insecure`
-
-Bring up the stack:
+Install the meta CLI:
 
 ```bash
-docker compose --env-file compose/.env.local -f compose/docker-compose.yml pull
-docker compose --env-file compose/.env.local -f compose/docker-compose.yml up -d
+python3 -m pip install -e .
+arp-jarvis versions
 ```
 
-:::tip
-This pulls version-pinned component images from GHCR, published by each repo.
+Bring up the stack and verify wiring:
+
+```bash
+arp-jarvis stack pull
+arp-jarvis stack up -d
+arp-jarvis doctor
+```
+
+:::note Docker Compose VS. CLI
+<details>
+These cli commands `stack pull` and `stack up -d` seem similar to docker CLI commands, and that's no coincidence. Underneath, these commands are just pulling and composing the docker images of JARVIS components from GitHub Container Registry. They are a thin wrapper to make things easier, using default `docker-compose` and `.env.local` files. 
+
+To see the exact underlying `docker compose` commands, add `--print-command`:
+
+```bash
+arp-jarvis stack pull --print-command
+arp-jarvis stack up -d --print-command
+```
+</details>
 :::
 
 
-Sanity check:
+If you're using the default security stance `dev-secure-keycloak` in the `.env.local`, you need to log in once:
 
 ```bash
-curl -sS http://127.0.0.1:8081/v1/health
-curl -sS http://127.0.0.1:8082/v1/health
+# username: dev
+# passcode: dev
+arp-jarvis auth login
 ```
 
-:::note
+:::warning Username and password
+These credentials are for dev environment ONLY.
+<details>
+This is an OAuth browser flow (see IETF [Documentation](https://datatracker.ietf.org/doc/html/rfc8628).) The CLI never asks for your password directly. For the default local realm, a dev user is pre-seeded. The credentials above are only for the Keycloak login page during the browser step, which then authenticates the CLI.
+
+There are two main reasons why it is setup this way:
+
+First, OAuth browser/device flow for user authentication is [preferred](https://oauth.net/2/grant-types/password/#:~:text=The%20Password%20grant%20type%20is,be%20used%20at%20all%20anymore.) over directly using resource owner passwords in STS. In fact, the latest OAuth 2.1 removed password grant flow entirely.
+
+Second, this is showcasing a realistic flow of how users may authenticate and authorize themselves with the deployed ARP system.
+</details>
+:::
+
+You can discover what NodeTypes are available:
+
+```bash
+arp-jarvis nodes list
+```
+
+:::note Default Endpoints
 
 - Keycloak is exposed on `http://localhost:8080` (realm: `arp-dev`).
 - Run Gateway is exposed on `http://127.0.0.1:8081`.
 - Run Coordinator is exposed on `http://127.0.0.1:8082`.
 
 :::
-
-### Recommended: install the meta CLI `arp-jarvis`
-
-`arp-jarvis` is a meta CLI tool for simplifying interactions with the deployed JARVIS Stack. 
-
-```bash
-STACK_VERSION="$(grep '^STACK_VERSION=' compose/.env.local | cut -d= -f2)"
-python3 -m pip install "arp-jarvis==${STACK_VERSION}"
-arp-jarvis versions
-```
 
 ---
 
@@ -109,28 +133,22 @@ For the default “general planner” composite flow, use the built-in NodeType:
 Start a run:
 
 ```bash
-STACK_VERSION="$(grep '^STACK_VERSION=' compose/.env.local | cut -d= -f2)"
+RUN_ID="$(arp-jarvis runs start --goal "Generate a UUID, then return it." -o json | \
+  python3 -c 'import json,sys; print(json.load(sys.stdin)["run"]["run_id"])')"
 
-curl -sS -X POST http://127.0.0.1:8081/v1/runs \
-  -H 'Content-Type: application/json' \
-  -d '{
-    "root_node_type_ref": {"node_type_id": "jarvis.composite.planner.general", "version": "'"${STACK_VERSION}"'"},
-    "input": {"goal": "Generate a UUID, then return it."}
-  }'
+echo "run_id: ${RUN_ID}"
 ```
 
-The response is a `Run` object. Save:
-- `run_id`
-- `root_node_run_id`
+The CLI output includes the `run_id` and copy/paste next steps.
 
 ---
 
 ## Step 3: Watch the run events (NDJSON)
 
-Run Gateway can stream run events as NDJSON:
+Run Gateway can stream run events as NDJSON. The CLI handles quoted/escaped edge cases automatically:
 
 ```bash
-curl -N -sS http://127.0.0.1:8081/v1/runs/<run_id>/events
+arp-jarvis runs events "${RUN_ID}"
 ```
 
 Each line is a JSON `RunEvent`. You should see events for:
@@ -144,10 +162,10 @@ Each line is a JSON `RunEvent`. You should see events for:
 
 The run’s “result” is represented by the outputs of the root `NodeRun` (and its descendants).
 
-Fetch the root `NodeRun` from the `Run Coordinator`:
+Fetch the root `NodeRun` via the CLI:
 
 ```bash
-curl -sS http://127.0.0.1:8082/v1/node-runs/<root_node_run_id>
+arp-jarvis runs inspect "${RUN_ID}" --include-node-runs
 ```
 
 When the root `NodeRun` reaches a terminal state, look at:

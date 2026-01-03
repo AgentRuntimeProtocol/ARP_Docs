@@ -26,17 +26,30 @@ You will start a `Run` via the ARP Standard `Run Gateway` `POST /v1/runs`.
 - A root `NodeTypeRef` to start from
   - Default JARVIS composite planner: `jarvis.composite.planner.general@<stack-version>`
 - If auth is enabled, a bearer token that passes gateway JWT validation (`iss` + `aud`).
+- If you are using `JARVIS_Release`, the `arp-jarvis` CLI is the preferred entrypoint.
 
 ## Steps
 
-1. Set your Run Gateway URL:
+1. Preferred (JARVIS_Release): start a run via the CLI:
+
+   ```bash
+   arp-jarvis runs start --goal "Generate a UUID, then return it."
+   ```
+
+   If auth is enabled, log in once:
+
+   ```bash
+   arp-jarvis auth login
+   ```
+
+2. Raw HTTP: set your Run Gateway URL:
 
    ```bash
    # Default `JARVIS_Release` stack port (RUN_GATEWAY_HOST_PORT)
    export RUN_GATEWAY_URL=http://127.0.0.1:8081
    ```
 
-2. Start a run (no auth / dev-insecure):
+3. Start a run (no auth / dev-insecure):
 
    ```bash
    curl -sS -X POST "$RUN_GATEWAY_URL/v1/runs" \
@@ -47,22 +60,12 @@ You will start a `Run` via the ARP Standard `Run Gateway` `POST /v1/runs`.
      }'
    ```
 
-3. (Optional) Start a run with a bearer token:
+4. (Optional) Start a run with a bearer token:
 
-   If you are using the Keycloak dev STS, mint a token (client credentials example):
+   If you are using the Keycloak dev STS, mint a token via the CLI:
 
    ```bash
-   export ARP_AUTH_TOKEN_ENDPOINT=http://localhost:8080/realms/arp-dev/protocol/openid-connect/token
-   export CLIENT_ID=arp-run-gateway
-   export CLIENT_SECRET=arp-run-gateway-secret
-
-   TOKEN="$(
-     curl -sS -X POST "$ARP_AUTH_TOKEN_ENDPOINT" \
-       -d grant_type=client_credentials \
-       -d client_id="$CLIENT_ID" \
-       -d client_secret="$CLIENT_SECRET" \
-       | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])'
-   )"
+   TOKEN="$(arp-jarvis auth token --audience arp-run-gateway)"
 
    curl -sS -X POST "$RUN_GATEWAY_URL/v1/runs" \
      -H 'Content-Type: application/json' \
@@ -72,6 +75,8 @@ You will start a `Run` via the ARP Standard `Run Gateway` `POST /v1/runs`.
        "input": {"goal": "Generate a UUID, then return it."}
      }'
    ```
+
+   If you are a service (client credentials), use your STS client ID/secret and mint a token at the token endpoint.
 
 ## Verify
 

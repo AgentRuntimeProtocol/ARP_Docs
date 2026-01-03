@@ -29,14 +29,22 @@ The event stream on `Run Gateway` is **optional** in the ARP Standard:
 
 ## Steps
 
-1. Set your Run Gateway URL:
+1. Preferred (JARVIS_Release): stream events via the CLI:
+
+   ```bash
+   arp-jarvis runs events <run_id>
+   ```
+
+   The CLI auto-decodes quoted/escaped NDJSON payloads from the gateway.
+
+2. Raw HTTP: set your Run Gateway URL:
 
    ```bash
    # Default `JARVIS_Release` stack port (RUN_GATEWAY_HOST_PORT)
    export RUN_GATEWAY_URL=http://127.0.0.1:8081
    ```
 
-2. Stream events:
+3. Stream events:
 
    ```bash
    curl -sS "$RUN_GATEWAY_URL/v1/runs/<run_id>/events"
