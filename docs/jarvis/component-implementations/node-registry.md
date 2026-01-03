@@ -32,7 +32,7 @@ Use the single meta CLI `arp-jarvis` (preferred over component CLIs):
 
 ```bash
 STACK_VERSION="0.3.3" # match `JARVIS_Release/stack.lock.json`
-CLI_VERSION="0.3.4"   # meta CLI release
+CLI_VERSION="0.3.5"   # meta CLI release
 python3 -m pip install "arp-jarvis==${CLI_VERSION}"
 arp-jarvis node-registry -- --host 127.0.0.1 --port 8084
 ```
