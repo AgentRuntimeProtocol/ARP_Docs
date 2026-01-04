@@ -27,8 +27,8 @@ The “full walkthrough” is the Thin Mode tutorial:
 
 ## Steps
 
-1. Define the wrapper `NodeType` input/output schemas (Pydantic models are a convenient source of JSON Schema).
-2. Implement the wrapper handler inside a node pack (a typed function decorated with `atomic_node(...)`).
+1. Define the wrapper `NodeType` input/output schemas as strict JSON Schema (OpenAI-accepted subset).
+2. Implement the wrapper handler inside a node pack (a JSON-first function decorated with `atomic_node(...)` and explicit `input_schema`/`output_schema`).
 3. Register the pack via a Python entry point (`jarvis.nodepacks`) so it is discoverable.
 4. Install the pack into:
    - `Node Registry` (for metadata seeding), and

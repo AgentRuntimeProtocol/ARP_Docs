@@ -123,18 +123,27 @@ from __future__ import annotations
 
 import os
 
-from pydantic import BaseModel
-
 from jarvis_atomic_nodes.sdk import NodeContext, atomic_node
 
 
-class HealthInput(BaseModel):
-    base_url: str | None = None
+HEALTH_INPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "base_url": {"type": ["string", "null"]},
+    },
+    "required": ["base_url"],
+}
 
-
-class HealthOutput(BaseModel):
-    status_code: int
-    text: str
+HEALTH_OUTPUT_SCHEMA = {
+    "type": "object",
+    "additionalProperties": False,
+    "properties": {
+        "status_code": {"type": "integer"},
+        "text": {"type": "string"},
+    },
+    "required": ["status_code", "text"],
+}
 
 
 @atomic_node(
@@ -142,19 +151,21 @@ class HealthOutput(BaseModel):
     side_effect="read",
     trust_tier="first_party",
     egress_policy="external_http",
+    input_schema=HEALTH_INPUT_SCHEMA,
+    output_schema=HEALTH_OUTPUT_SCHEMA,
 )
-async def acme_api_health(inp: HealthInput, ctx: NodeContext) -> HealthOutput:
+async def acme_api_health(inputs: dict, ctx: NodeContext) -> dict:
     \"\"\"Call `GET /health` on an existing service and return the raw response text.\"\"\"
 
-    base_url = inp.base_url or (os.environ.get("ACME_API_BASE_URL") or "").strip()
+    base_url = (inputs.get("base_url") or os.environ.get("ACME_API_BASE_URL") or "").strip()
     if not base_url:
-        raise ValueError("Missing base URL (set ACME_API_BASE_URL or pass HealthInput.base_url)")
+        raise ValueError("Missing base URL (set ACME_API_BASE_URL or pass base_url)")
 
     import httpx
 
     async with httpx.AsyncClient(timeout=5.0) as client:
         resp = await client.get(f\"{base_url.rstrip('/')}/health\")
-    return HealthOutput(status_code=resp.status_code, text=resp.text)
+    return {"status_code": resp.status_code, "text": resp.text}
 ```
 
 Notes:
