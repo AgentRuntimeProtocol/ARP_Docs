@@ -29,7 +29,7 @@ In the recommended `JARVIS_Release` Docker Compose stack:
 Use the single meta CLI `arp-jarvis` (preferred over component CLIs):
 
 ```bash
-STACK_VERSION="0.3.3" # match `JARVIS_Release/stack.lock.json`
+STACK_VERSION="0.3.8" # match `JARVIS_Release/stack.lock.json`
 CLI_VERSION="0.3.8"   # meta CLI release
 python3 -m pip install "arp-jarvis==${CLI_VERSION}"
 arp-jarvis composite-executor -- --host 127.0.0.1 --port 8083
